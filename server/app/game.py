@@ -74,4 +74,7 @@ class TicTacToe:
             if all(self._board[x][y] == 2 for x, y in combination):
                 self._game_over = True
                 return 2
+        
+        if all(self._board[x][y] != 0 for x in range(3) for y in range(3)):
+            return 3
         return 0

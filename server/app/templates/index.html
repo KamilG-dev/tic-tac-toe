@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe</title>
+
+
+    <style>
+        .html, body {
+            margin: 0;
+            padding: 0;
+        }
+        #game {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 300px;
+            height: 300px;
+            border: 1px solid black;
+        }
+        .box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            cursor: pointer;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    
+<div id="game">
+    <div id="header">
+        <h1>Tic Tac Toe</h1>
+        <p id="prompt"></p>
+        <p id="whotomove"></p>
+    </div>
+    <div id="board">
+        <div class="box" id="box0" data-row="0" data-col="0"></div>
+        <div class="box" id="box1" data-row="0" data-col="1"></div>
+        <div class="box" id="box2" data-row="0" data-col="2"></div>
+        <div class="box" id="box3" data-row="1" data-col="0"></div>
+        <div class="box" id="box4" data-row="1" data-col="1"></div>
+        <div class="box" id="box5" data-row="1" data-col="2"></div>
+        <div class="box" id="box6" data-row="2" data-col="0"></div>
+        <div class="box" id="box7" data-row="2" data-col="1"></div>
+        <div class="box" id="box8" data-row="2" data-col="2"></div>
+    </div>
+</div>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+
+var is_o = false;
+var o_to_move = true;
+var winner = 0;
+let whotomove_element = document.getElementById('whotomove');
+let prompt_element = document.getElementById('prompt');
+
+var socket = io();
+socket.on('connect', () => {
+    console.log(socket.id);
+    // socket.emit('event', {data: 'test'});
+});
+socket.on('start', (data) => {
+    console.log(data);
+    is_o = data.o == socket.id;
+    prompt_element.innerText = is_o ? 'You are O' : 'You are X';
+    whotomove_element.innerText = is_o ? 'Your move' : 'Opponent\'s move';
+});
+
+socket.on('state', (data) => {
+    let board = data.board;
+    let o_to_move = data.o_to_move;
+
+    for(let i = 0; i < 3; i++) {
+        for(let j = 0; j < 3; j++) {
+            let box = document.getElementById('box' + (i * 3 + j));
+            box.innerText = board[i][j] == 0 ? '' : board[i][j] == 1 ? 'O' : 'X';
+        }
+    }
+    whotomove_element.innerText = o_to_move == is_o ? 'Your move' : 'Opponent\'s move';
+});
+
+socket.on('winner', (data) => {
+    let winner = parseInt(data);
+    if(winner == 3) {
+        prompt_element.innerText = 'Draw!';
+    }
+    else if(winner == 1 && is_o) {
+        prompt_element.innerText = 'You win!';
+    } else if(winner == 2 && !is_o) {
+        prompt_element.innerText = 'You win!';
+    } else {
+        prompt_element.innerText = 'You lose!';
+    }
+    whotomove_element.innerText = '';
+})
+let boxes = document.querySelectorAll('.box');
+boxes.forEach((box) => {
+    box.addEventListener('click', (e) => {
+        let row = e.target.getAttribute('data-row');
+        let col = e.target.getAttribute('data-col');
+        socket.emit('move', {x: row, y: col});
+    })
+});
+</script>
+</body>
+</html>
